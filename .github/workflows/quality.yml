@@ -73,14 +73,15 @@ jobs:
     name: E2E
     timeout-minutes: 30
     runs-on: ubuntu-latest
-    container: 
-      image: mcr.microsoft.com/playwright:v1.38.0-jammy
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Install
         uses: ./tooling/github-actions/install
+
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install chromium --with-deps
       
       - name: Setup database
         run: |
