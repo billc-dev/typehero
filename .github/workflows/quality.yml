@@ -86,7 +86,7 @@ jobs:
       - name: Setup database
         run: |
           cp .env.example .env
-          docker compose up -d
+          docker compose up -d --wait
           pnpm db:push
           pnpm db:seed
 
