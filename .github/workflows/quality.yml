@@ -87,6 +87,8 @@ jobs:
         run: |
           cp .env.example .env
           docker compose up -d
+          pnpm db:push
+          pnpm db:seed
 
       - name: Build
         run: turbo build
@@ -113,7 +115,3 @@ jobs:
           projectName: typehero
           directory: apps/web/playwright-report
           wranglerVersion: '3'
-      
-      - name: Output report URL
-        if: always()
-        run: echo ${{ steps.report.outputs.url }} >> $GITHUB_STEP_SUMMARY
