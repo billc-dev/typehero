@@ -21,20 +21,32 @@ jobs:
                repo: context.repo.repo,
                run_id: context.payload.workflow_run.id,
             });
-            const matchArtifact = allArtifacts.data.artifacts.filter((artifact) => {
+            const reportArtifact = allArtifacts.data.artifacts.find((artifact) => {
               return artifact.name == "report"
-            })[0];
-            const download = await github.rest.actions.downloadArtifact({
+            });
+            const report = await github.rest.actions.downloadArtifact({
                owner: context.repo.owner,
                repo: context.repo.repo,
-               artifact_id: matchArtifact.id,
+               artifact_id: reportArtifact.id,
+               archive_format: 'zip',
+            });
+            const prNumberArtifact = allArtifacts.data.artifacts.find((artifact) => {
+              return artifact.name == "pr_number"
+            });
+            const prNumber = await github.rest.actions.downloadArtifact({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               artifact_id: prNumberArtifact.id,
                archive_format: 'zip',
             });
             const fs = require('fs');
-            fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/report.zip`, Buffer.from(download.data));
+            fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/report.zip`, Buffer.from(report.data));
+            fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/pr_number.zip`, Buffer.from(prNumber.data));
 
-      - name: Unzip artifact
-        run: unzip report.zip -d report
+      - name: Unzip artifacts
+        run: |
+          unzip report.zip -d report
+          unzip pr_number.zip
 
       - name: Publish report
         if: always()
@@ -53,10 +65,13 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const fs = require('fs');
+            const issue_number = Number(fs.readFileSync('./pr_number'));
+
             const { data: comments } = await github.rest.issues.listComments({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: ${{ github.event.workflow_run.pull_requests.number }},
+                issue_number: issue_number
             });
 
             const botComment = comments.find(comment => {
