@@ -12,15 +12,17 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
-      - name: Download artifact
+      - name: Download artifacts
         uses: actions/github-script@v6
         with:
           script: |
+            console.log(context);
             const allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
                owner: context.repo.owner,
                repo: context.repo.repo,
                run_id: context.payload.workflow_run.id,
             });
+
             const reportArtifact = allArtifacts.data.artifacts.find((artifact) => {
               return artifact.name == "report"
             });
@@ -30,6 +32,7 @@ jobs:
                artifact_id: reportArtifact.id,
                archive_format: 'zip',
             });
+
             const prNumberArtifact = allArtifacts.data.artifacts.find((artifact) => {
               return artifact.name == "pr_number"
             });
@@ -39,6 +42,7 @@ jobs:
                artifact_id: prNumberArtifact.id,
                archive_format: 'zip',
             });
+
             const fs = require('fs');
             fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/report.zip`, Buffer.from(report.data));
             fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/pr_number.zip`, Buffer.from(prNumber.data));
