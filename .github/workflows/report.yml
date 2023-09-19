@@ -58,6 +58,7 @@ jobs:
                 repo: context.repo.repo,
                 issue_number: ${{ github.event.workflow_run.pull_requests.number }},
             });
+            
             const botComment = comments.find(comment => {
                 return comment.user.type === 'Bot' && comment.body.includes('E2E report:')
             });
