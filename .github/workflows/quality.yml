@@ -109,5 +109,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: report-${{ github.run_id }}
+          name: report
           path: apps/web/playwright-report/
