@@ -6,25 +6,28 @@ on:
     types:
       - completed
 
+env:
+  REPORT_NAME: report-${{ github.event.workflow_run.id }}
+
 jobs:
   e2e:
     name: E2E
     timeout-minutes: 10
     runs-on: ubuntu-latest
-    # if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
+    if: github.event.workflow_run.event == 'pull_request'
     steps:
       - name: Download report
         uses: actions/download-artifact@v3
         with:
-          name: report-${{ github.event.workflow_run.id }}
+          name: ${{ env.REPORT_NAME }}
+          path: ${{ env.REPORT_NAME }}
 
       - name: Publish report
-        id: report
         if: always()
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: typehero
-          directory: report-${{ github.event.workflow_run.id }}
+          directory: ${{ env.REPORT_NAME }}
           wranglerVersion: '3'
