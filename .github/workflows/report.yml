@@ -38,6 +38,7 @@ jobs:
 
       - name: Publish report
         if: always()
+        id: report
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -45,3 +46,36 @@ jobs:
           projectName: typehero
           directory: report
           wranglerVersion: '3'
+
+      - name: Comment on PR
+        if: always() && github.event.workflow_run.event == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: ${{ github.event.workflow_run.pull_requests.number }},
+            });
+            const botComment = comments.find(comment => {
+                return comment.user.type === 'Bot' && comment.body.includes('E2E report:')
+            });
+
+            const output = 'E2E report: ${{ steps.report.outputs.url }}';
+
+            if (botComment) {
+                github.rest.issues.updateComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    comment_id: botComment.id
+                    body: output
+                });
+            } else {
+                github.rest.issues.createComment({
+                    issue_number: context.issue.number,
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    body: output
+                });
+            }
