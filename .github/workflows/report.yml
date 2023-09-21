@@ -49,7 +49,7 @@ jobs:
           directory: report
           wranglerVersion: '3'
 
-      - name: Comment on PR
+      - name: Comment on PR test
         if: always() && github.event.workflow_run.event == 'pull_request'
         uses: actions/github-script@v6
         with:
